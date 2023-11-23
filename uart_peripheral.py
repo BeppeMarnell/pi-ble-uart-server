@@ -25,7 +25,19 @@ class TxCharacteristic(Characteristic):
         Characteristic.__init__(self, bus, index, UART_TX_CHARACTERISTIC_UUID,
                                 ['notify'], service)
         self.notifying = False
-        GLib.io_add_watch(sys.stdin, GLib.IO_IN, self.on_console_input)
+        # GLib.io_add_watch(sys.stdin, GLib.IO_IN, self.on_console_input)
+        
+        self.interval = 0.5
+        GLib.timeout_add_seconds(self.interval, self.send_fake_data)
+
+    def send_fake_data(self):
+        if not self.notifying:
+            return True  # Continue the timeout
+        # Generate fake data
+        fake_data = "Sensor data: " + str(random.randint(1, 100))
+        value = [dbus.Byte(c.encode()) for c in fake_data]
+        self.PropertiesChanged(GATT_CHRC_IFACE, {'Value': value}, [])
+        return True  # Continue the timeout
 
     def on_console_input(self, fd, condition):
         s = fd.readline()
