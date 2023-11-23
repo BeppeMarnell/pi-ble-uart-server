@@ -105,7 +105,6 @@ class UartApplication(Application):
         Application.__init__(self, bus)
         tmp_uart = UartService(bus, 0)
         self.add_service(self.tmp_uart)
-        
         self.tmp_tx = tmp_uart.tx_chars
 
 class UartAdvertisement(Advertisement):
@@ -143,7 +142,7 @@ def main():
     ad_manager = dbus.Interface(bus.get_object(BLUEZ_SERVICE_NAME, adapter),
                                 LE_ADVERTISING_MANAGER_IFACE)
 
-    app = UartApplication(bus, tx_chars)
+    app = UartApplication(bus)
     adv = UartAdvertisement(bus, 0)
 
     # mainloop = GLib.MainLoop()
