@@ -72,9 +72,10 @@ class RxCharacteristic(Characteristic):
         print('remote: {}'.format(bytearray(value).decode()))
 
 class UartService(Service):
-    def __init__(self, bus, index, tx_chars):
+    def __init__(self, bus, index):
         Service.__init__(self, bus, index, UART_SERVICE_UUID, True)
-        self.add_characteristic(tx_chars)
+        self.tx_chars = TxCharacteristic(bus, 0, self)
+        self.add_characteristic(self.tx_chars)
         self.add_characteristic(RxCharacteristic(bus, 1, self))
 
 class Application(dbus.service.Object):
@@ -100,9 +101,12 @@ class Application(dbus.service.Object):
         return response
 
 class UartApplication(Application):
-    def __init__(self, bus, tx_chars):
+    def __init__(self, bus):
         Application.__init__(self, bus)
-        self.add_service(UartService(bus, 0, tx_chars))
+        tmp_uart = UartService(bus, 0)
+        self.add_service(self.tmp_uart)
+        
+        self.tmp_tx = tmp_uart.tx_chars
 
 class UartAdvertisement(Advertisement):
     def __init__(self, bus, index):
@@ -127,7 +131,6 @@ def main():
     
     dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
     bus = dbus.SystemBus()
-    tx_chars = TxCharacteristic(bus, 0, self)
     adapter = find_adapter(bus)
     
     if not adapter:
@@ -153,7 +156,7 @@ def main():
                                      error_handler=register_ad_error_cb)
     try:
         while True:
-            tx_chars.send_fake_data()
+            app.tmp_tx.send_fake_data()
             time.sleep(0.5)
     except KeyboardInterrupt:
         adv.Release()
