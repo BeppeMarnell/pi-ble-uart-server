@@ -104,7 +104,7 @@ class UartApplication(Application):
     def __init__(self, bus):
         Application.__init__(self, bus)
         tmp_uart = UartService(bus, 0)
-        self.add_service(self.tmp_uart)
+        self.add_service(tmp_uart)
         self.tmp_tx = tmp_uart.tx_chars
 
 class UartAdvertisement(Advertisement):
