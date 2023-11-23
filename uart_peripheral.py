@@ -6,6 +6,7 @@ from example_advertisement import register_ad_cb, register_ad_error_cb
 from example_gatt_server import Service, Characteristic
 from example_gatt_server import register_app_cb, register_app_error_cb
 import random
+import time
 
 BLUEZ_SERVICE_NAME =           'org.bluez'
 DBUS_OM_IFACE =                'org.freedesktop.DBus.ObjectManager'
@@ -26,6 +27,9 @@ class TxCharacteristic(Characteristic):
         Characteristic.__init__(self, bus, index, UART_TX_CHARACTERISTIC_UUID,
                                 ['notify'], service)
         self.notifying = False
+        
+        self.interval = 0.2  # Set the interval to send fake data every 5 seconds
+        GLib.timeout_add_seconds(self.interval, self.send_fake_data)
 
     def send_fake_data(self):
         if not self.notifying:
@@ -127,7 +131,6 @@ def find_adapter(bus):
 def main():
     global mainloop
     
-    
     dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
     bus = dbus.SystemBus()
     adapter = find_adapter(bus)
@@ -145,7 +148,7 @@ def main():
     app = UartApplication(bus)
     adv = UartAdvertisement(bus, 0)
 
-    # mainloop = GLib.MainLoop()
+    mainloop = GLib.MainLoop()  
 
     service_manager.RegisterApplication(app.get_path(), {},
                                         reply_handler=register_app_cb,
@@ -154,9 +157,7 @@ def main():
                                      reply_handler=register_ad_cb,
                                      error_handler=register_ad_error_cb)
     try:
-        while True:
-            app.tmp_tx.send_fake_data()
-            time.sleep(0.5)
+        mainloop.run()
     except KeyboardInterrupt:
         adv.Release()
 
