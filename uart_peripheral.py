@@ -124,10 +124,10 @@ def find_adapter(bus):
 def main():
     global mainloop
     
-    tx_chars = TxCharacteristic(bus, 0, self)
     
     dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
     bus = dbus.SystemBus()
+    tx_chars = TxCharacteristic(bus, 0, self)
     adapter = find_adapter(bus)
     
     if not adapter:
