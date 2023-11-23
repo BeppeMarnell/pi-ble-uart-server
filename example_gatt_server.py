@@ -7,7 +7,7 @@ import dbus.service
 
 import array
 try:
-  from gi.repository import GObject  # python3
+  from gi.repository import GLib  # python3
 except ImportError:
   import gobject as GObject  # python2
   
@@ -305,7 +305,7 @@ class HeartRateMeasurementChrc(Characteristic):
         if not self.notifying:
             return
 
-        GObject.timeout_add(1000, self.hr_msrmt_cb)
+        GLib.timeout_add(1000, self.hr_msrmt_cb)
 
     def StartNotify(self):
         if self.notifying:
@@ -392,7 +392,7 @@ class BatteryLevelCharacteristic(Characteristic):
                 service)
         self.notifying = False
         self.battery_lvl = 100
-        GObject.timeout_add(5000, self.drain_battery)
+        GLib.timeout_add(5000, self.drain_battery)
 
     def notify_battery_level(self):
         if not self.notifying:
@@ -649,7 +649,7 @@ def main():
 
     app = Application(bus)
 
-    mainloop = GObject.MainLoop()
+    mainloop = GLib.MainLoop()
 
     print('Registering GATT application...')
 

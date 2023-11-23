@@ -10,7 +10,7 @@ import dbus.service
 import array
 
 try:
-  from gi.repository import GObject  # python3
+  from gi.repository import GLib  # python3
 except ImportError:
   import gobject as GObject  # python2
 
@@ -192,7 +192,7 @@ def main():
 
     test_advertisement = TestAdvertisement(bus, 0)
 
-    mainloop = GObject.MainLoop()
+    mainloop = GLib.MainLoop()
 
     ad_manager.RegisterAdvertisement(test_advertisement.get_path(), {},
                                      reply_handler=register_ad_cb,
