@@ -8,4 +8,3 @@ In order to do so I created a virtual environment with python3.11 and installed 
 
 ## More info about the code
 
-uart_peripheral 
