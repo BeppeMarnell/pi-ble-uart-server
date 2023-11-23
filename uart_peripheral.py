@@ -26,16 +26,13 @@ class TxCharacteristic(Characteristic):
         Characteristic.__init__(self, bus, index, UART_TX_CHARACTERISTIC_UUID,
                                 ['notify'], service)
         self.notifying = False
-        # GLib.io_add_watch(sys.stdin, GLib.IO_IN, self.on_console_input)
-        
-        self.interval = 0.5
-        GLib.timeout_add_seconds(self.interval, self.send_fake_data)
 
     def send_fake_data(self):
         if not self.notifying:
             return True  # Continue the timeout
+        
         # Generate fake data
-        fake_data = "Sensor data: " + str(random.randint(1, 100))
+        fake_data = "This is a test to understand whether the BLE connection is stable or not. Let's see how it performs compared to RFCOMM."
         value = [dbus.Byte(c.encode()) for c in fake_data]
         self.PropertiesChanged(GATT_CHRC_IFACE, {'Value': value}, [])
         return True  # Continue the timeout
@@ -75,9 +72,9 @@ class RxCharacteristic(Characteristic):
         print('remote: {}'.format(bytearray(value).decode()))
 
 class UartService(Service):
-    def __init__(self, bus, index):
+    def __init__(self, bus, index, tx_chars):
         Service.__init__(self, bus, index, UART_SERVICE_UUID, True)
-        self.add_characteristic(TxCharacteristic(bus, 0, self))
+        self.add_characteristic(tx_chars)
         self.add_characteristic(RxCharacteristic(bus, 1, self))
 
 class Application(dbus.service.Object):
@@ -103,9 +100,9 @@ class Application(dbus.service.Object):
         return response
 
 class UartApplication(Application):
-    def __init__(self, bus):
+    def __init__(self, bus, tx_chars):
         Application.__init__(self, bus)
-        self.add_service(UartService(bus, 0))
+        self.add_service(UartService(bus, 0, tx_chars))
 
 class UartAdvertisement(Advertisement):
     def __init__(self, bus, index):
@@ -126,9 +123,13 @@ def find_adapter(bus):
 
 def main():
     global mainloop
+    
+    tx_chars = TxCharacteristic(bus, 0, self)
+    
     dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
     bus = dbus.SystemBus()
     adapter = find_adapter(bus)
+    
     if not adapter:
         print('BLE adapter not found')
         return
@@ -139,10 +140,10 @@ def main():
     ad_manager = dbus.Interface(bus.get_object(BLUEZ_SERVICE_NAME, adapter),
                                 LE_ADVERTISING_MANAGER_IFACE)
 
-    app = UartApplication(bus)
+    app = UartApplication(bus, tx_chars)
     adv = UartAdvertisement(bus, 0)
 
-    mainloop = GLib.MainLoop()
+    # mainloop = GLib.MainLoop()
 
     service_manager.RegisterApplication(app.get_path(), {},
                                         reply_handler=register_app_cb,
@@ -151,7 +152,9 @@ def main():
                                      reply_handler=register_ad_cb,
                                      error_handler=register_ad_error_cb)
     try:
-        mainloop.run()
+        while True:
+            tx_chars.send_fake_data()
+            time.sleep(0.5)
     except KeyboardInterrupt:
         adv.Release()
 
